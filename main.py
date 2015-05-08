@@ -32,14 +32,14 @@ if __name__ == '__main__':
     # Left wheel follow the right wheel
     s.activate_us_front()
     time.sleep(0.5)
-    m.vacuum_cleaner_start()
-    #s.unactivate_us_front()
+    #m.vacuum_cleaner_start()
+    s.unactivate_us_front()
     #m.move_forward(speed_left=45, speed_right=53)
-    m.move_forward(speed_left=30, speed_right=45)
+    m.move_forward(speed_left=100, speed_right=100)
     try:
         # Infinite and main loop
         while True:
-            test_line_moving(m, e, s)
+            #test_line_moving(m, e, s)
             #sup.demo()
             sup.cycle = sup.cycle + 1
 

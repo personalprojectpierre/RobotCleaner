@@ -37,8 +37,8 @@ class Motor(object):
         #: MCP23017 (expander control)
         self.mcp = mcp
 
-        self.speed_right = 100
-        self.speed_left = 100
+        self.speed_right = 0
+        self.speed_left = 0
 
         self.previous = 0
 
@@ -168,73 +168,106 @@ class Motor(object):
     def change_speed_left(self, speed):
         self.p2.ChangeDutyCycle(speed)
 
-    def enslavement_position(self, target, process_variable):
-        if target > process_variable+1:  # Error computing
-            print("+")
-            self.speed_left = self.speed_left + 1
-            if self.speed_left > 60:
-                self.speed_left = 60
-            self.change_speed_left(self.speed_left)
-        if target < process_variable-1:  # Error computing
-            print("-")
-            self.speed_left = self.speed_left - 1
-            if self.speed_left < 35:
-                self.speed_left = 35
-            self.change_speed_left(self.speed_left)
 
-    def enslavement_right(self, target,process_variable):
-            actual = time.time()
-            diff = actual - self.previous
-            if diff > 0.30:  # Time step to avoid redundancy
-                self.previous = actual
-                if target > process_variable+0.05:  # Error computing
-                    #print("+")
-                    self.speed_right = self.speed_right + 1
-                    if self.speed_right > 60:
-                        self.speed_right = 60
-                    self.change_speed_right(self.speed_right)
-                if target < process_variable-0.05:
-                    #print("-")
-                    self.speed_right = self.speed_right - 1
-                    if self.speed_right < 33:
-                        self.speed_right = 33
-                    self.change_speed_right(self.speed_right)
 
-    def enslavement_left(self, target,process_variable):
+    def enslavement(self, dist_target, dist_right, dist_left, speed_right,
+                    speed_left):
         actual = time.time()
         diff = actual - self.previous
-        if diff > 0.30:  # Time step to avoid redundancy
-            self.previous = actual
-            if target > process_variable+0.05:
-                #print("+")
-                self.speed_left = self.speed_left + 1
-                if self.speed_left > 47:
-                    self.speed_left = 47
-                self.change_speed_left(self.speed_left)
-            if target < process_variable-0.05:
-                #print("-")
-                self.speed_left = self.speed_left - 1
-                if self.speed_left < 20:
-                    self.speed_left = 20
-                self.change_speed_left(self.speed_left)
-
-    def enslavement_speed(self, target, process_variable):
-        actual = time.time()
-        diff = actual - self.previous
-        if diff > 0.30:  # Time step to avoid redundancy
-            self.previous = actual
-            if target > process_variable+1:
-                print("+")
-                self.speed_left = self.speed_left + 1
-                if self.speed_left > 82:
-                    self.speed_left = 82
-                self.change_speed_left(self.speed_left)
-            if target < process_variable-1:
-                print("-")
-                self.speed_left = self.speed_left - 1
-                if self.speed_left < 22:
-                    self.speed_left = 22
-                self.change_speed_left(self.speed_left)
-
+        if diff > 1: # each seconds
+            GAIN_PROPORTIONAL_DISTANCE = 0.7
+            GAIN_DERIVE_DISTANCE = 7
+            GAIN_PROPORTIONNEL_ROTATION = 0.7
+            GAIN_DERIVE_ROTATION = 7
+            consigne_orientation = 0
+            dist = (dist_right + dist_left) /2
+            speed = (speed_right + speed_left)/2
+            delta = dist_target - dist
+            cmd = delta * GAIN_PROPORTIONAL_DISTANCE
+            cmd_dist = cmd - GAIN_DERIVE_DISTANCE*speed
+            orientation = dist_right - dist_left
+            vitesseOrientation = speed_right - speed_left
+            delta = consigne_orientation - orientation
+            cmd = delta * GAIN_PROPORTIONNEL_ROTATION
+            cmd_rotation = cmd - GAIN_DERIVE_ROTATION*vitesseOrientation
+            if cmd_dist > 100:
+                cmd_dist = 100
+            if cmd_dist < 20:
+                cmd_dist = 20
+            cmd_right = cmd_dist + cmd_rotation
+            cmd_left = cmd_dist - cmd_rotation
+            print(str(dist_right)+" "+str(dist_left)+" "+str(cmd_right)+" "+str(cmd_left))
+            self.change_speed_right(cmd_right)
+            self.change_speed_left(cmd_left)
     # Moving
     #def move(self,dx,dy):
+
+
+
+    # def enslavement_position(self, target, process_variable):
+    #     if target > process_variable+1:  # Error computing
+    #         print("+")
+    #         self.speed_left = self.speed_left + 1
+    #         if self.speed_left > 60:
+    #             self.speed_left = 60
+    #         self.change_speed_left(self.speed_left)
+    #     if target < process_variable-1:  # Error computing
+    #         print("-")
+    #         self.speed_left = self.speed_left - 1
+    #         if self.speed_left < 35:
+    #             self.speed_left = 35
+    #         self.change_speed_left(self.speed_left)
+    #
+    # def enslavement_right(self, target,process_variable):
+    #         actual = time.time()
+    #         diff = actual - self.previous
+    #         if diff > 0.30:  # Time step to avoid redundancy
+    #             self.previous = actual
+    #             if target > process_variable+0.05:  # Error computing
+    #                 #print("+")
+    #                 self.speed_right = self.speed_right + 1
+    #                 if self.speed_right > 60:
+    #                     self.speed_right = 60
+    #                 self.change_speed_right(self.speed_right)
+    #             if target < process_variable-0.05:
+    #                 #print("-")
+    #                 self.speed_right = self.speed_right - 1
+    #                 if self.speed_right < 33:
+    #                     self.speed_right = 33
+    #                 self.change_speed_right(self.speed_right)
+    #
+    # def enslavement_left(self, target,process_variable):
+    #     actual = time.time()
+    #     diff = actual - self.previous
+    #     if diff > 0.30:  # Time step to avoid redundancy
+    #         self.previous = actual
+    #         if target > process_variable+0.05:
+    #             #print("+")
+    #             self.speed_left = self.speed_left + 1
+    #             if self.speed_left > 47:
+    #                 self.speed_left = 47
+    #             self.change_speed_left(self.speed_left)
+    #         if target < process_variable-0.05:
+    #             #print("-")
+    #             self.speed_left = self.speed_left - 1
+    #             if self.speed_left < 20:
+    #                 self.speed_left = 20
+    #             self.change_speed_left(self.speed_left)
+    #
+    # def enslavement_speed(self, target, process_variable):
+    #     actual = time.time()
+    #     diff = actual - self.previous
+    #     if diff > 0.30:  # Time step to avoid redundancy
+    #         self.previous = actual
+    #         if target > process_variable+1:
+    #             print("+")
+    #             self.speed_left = self.speed_left + 1
+    #             if self.speed_left > 82:
+    #                 self.speed_left = 82
+    #             self.change_speed_left(self.speed_left)
+    #         if target < process_variable-1:
+    #             print("-")
+    #             self.speed_left = self.speed_left - 1
+    #             if self.speed_left < 22:
+    #                 self.speed_left = 22
+    #             self.change_speed_left(self.speed_left)

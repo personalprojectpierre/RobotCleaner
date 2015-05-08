@@ -43,20 +43,14 @@ def test_line_distance(m, e, s):
         # Conclusion: It depends on the bouncetime and speed
 
 def test_line_moving(m, e, s):
-    dist_target = 225.0000000
+    dist_target = 80.0000000
+    dist_covered = 80.0000000
     dist_right = e.get_distance_right()
     dist_left = e.get_distance_left()
-   # print("Dist_right: "+str(dist_right)+" dist_left: "+str(dist_left))
-    print("motor_right: "+str(m.speed_right)+" motor_left: "+str(m.speed_left))
-   # m.enslavement_position(target=dist_right, process_variable=dist_left)
     speed_right = e.get_speed_right()
     speed_left = e.get_speed_left()
-
-    #print("Speed_right_e: "+str(speed_right)+" Speed_left_e: "+str(speed_left))
-    #m.enslavement_left(target=10, process_variable=speed_left)
-    #m.enslavement_right(target=10, process_variable=speed_right)
-
-    if (dist_left >= dist_target) or (dist_right >= dist_target):
+    m.enslavement(dist_target, dist_right, dist_left, speed_right, speed_left)
+    if (dist_left >= dist_covered) or (dist_right >= dist_covered):
         delta = dist_right-dist_left
         print("Dist right: "+str(dist_right)+" Dist left: "+str(dist_left))
         print("Delta: "+str(delta))
@@ -65,8 +59,12 @@ def test_line_moving(m, e, s):
         m.stop_motors()
         GPIO.cleanup()       # clean up GPIO on CTRL+C exit
         sys.exit(0)
+    #print("Dist right: "+str(dist_right)+" Dist left: "+str(dist_left))
+    #print("Spd right: "+str(speed_right)+" Spd left: "+str(speed_left))
     # Conclusion:
-    # Too much reactive
+    # Deviate little on the right (motor left too strong)
+    # There is a correlation between the speed of the motor
+    #  and the sampling of the encoder
 
 
 def test_round_distance(m, e, s):

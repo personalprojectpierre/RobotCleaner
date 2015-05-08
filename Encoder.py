@@ -49,7 +49,7 @@ class Encoder(object):
 
     def get_speed_right(self):
         delta = time.time() - self.start_time
-        return self.get_distance_right() / delta
+        return self.get_distance_right() / delta  # cm/s
 
     def get_speed_left(self):
         delta = time.time() - self.start_time
