@@ -45,11 +45,16 @@ class Sonar(object):
 
     def unactivate_us_front(self):
         self.mcp.output(self.pin_us_front_e, False)
-    # US
-    # Fonction
-    # SPI reading of the chip MCP3008 of the input adcnum (0 to 7)
-    # return: value
-    # rtype: int
+
+    """
+    US
+
+    Function
+    SPI reading of the chip MCP3008 of the input adcnum (0 to 7)
+
+    return: value
+    rtype: int
+    """
     def readADC(self, adcnum):
         if ((adcnum > 7) or (adcnum < 0)):
                 return -1

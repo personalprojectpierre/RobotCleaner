@@ -19,6 +19,8 @@ class Supervisor(object):
         self.s = s
         self.t = 0  # time in s
 
+    def motion_control(self,m,e,s):
+        m.regulation(e, speed_target=70)
 
     def detection_obstacle(self):
             dist_front = self.s.getUSFront()
@@ -28,21 +30,13 @@ class Supervisor(object):
                 time.sleep(2)
                 self.m.turn_right(speed_left=100, speed_right=100)
                 time.sleep(2.5)
-                #reach_distance(e, distance=20)
-                #while self.s.getUSFront() < self.rangeDetection+5:
-                #while self.s.getUSFront() < self.rangeDetection+5:
-                #self.m.move_backward(speed_left=100, speed_right=100)
-                # while self.s.getUSFront() < self.rangeDetection+20:
-                # self.m.turn_right(speed_left=100, speed_right=100)
                 self.m.move_forward(speed_left=33, speed_right=50)
                 self.m.vacuum_cleaner_start()
 
-    def end(self, dist_target, dist_right, dist_left):
-        if self.e.distance_reached(dist_target, dist_right, dist_left):
+    def end(self, dist_target):
+        if self.e.is_distance_reached(dist_target):
             self.m.fast_motor_stop()
             self.m.vacuum_cleaner_stop()
-            delta = dist_right-dist_left
-            print("Delta: "+str(delta))
             time.sleep(2)  # Watch out to the time.sleep() function
             self.m.stop_motors()
             GPIO.cleanup()       # clean up GPIO on CTRL+C exit
@@ -52,4 +46,4 @@ class Supervisor(object):
         self.detection_obstacle()
         dist_right = self.e.get_distance_right()
         dist_left = self.e.get_distance_left()
-        self.m.enslavement_position(target=dist_right, process_variable=dist_left)
+        #self.m.enslavement_position(target=dist_right, process_variable=dist_left)

@@ -9,38 +9,25 @@ class Motor(object):
         self.pin_11 = 11  # BOARD
         #: pin_motor_left_e
         self.pin_13 = 13  # BOARD
-
         self.p1 = None
         self.p2 = None
-
-        pin_7 = 7
-
-        pin_3 = 3
-        pin_4 = 4
-        pin_5 = 5
-        pin_6 = 6
-
         #: pin_motor_left_e
-        self.m3e = pin_7
-
+        self.m3e = 7
         #: pin_motor_right_a
-        self.m1a = pin_3
+        self.m1a = 3
         #: pin_motor_right_b
-        self.m1b = pin_4
-
+        self.m1b = 4
         #: pin_motor_left_a
-        self.m2a = pin_5
+        self.m2a = 5
         #: pin_motor_left_b
-        self.m2b = pin_6
-
-
+        self.m2b = 6
         #: MCP23017 (expander control)
         self.mcp = mcp
-
         self.speed_right = 0
         self.speed_left = 0
-
-        self.previous = 0
+        self.previous_time = 0
+        self.pwm_previous_right = 0
+        self.pwm_previous_left = 0
 
     def init_motor(self, speed_right=0, speed_left=0):
         GPIO.setmode(GPIO.BOARD)
@@ -52,55 +39,50 @@ class Motor(object):
         self.p1 = GPIO.PWM(self.pin_13, 500)  # (channel=4)  frequency=500Hz
         self.p2 = GPIO.PWM(self.pin_11, 500)  # (channel=4)  frequency=500Hz
         self.start_motors()
-
         self.mcp.config(self.m3e,  self.mcp.OUTPUT)
         self.vacuum_cleaner_stop()
-
         self.mcp.config(self.m1a,  self.mcp.OUTPUT)
         self.mcp.config(self.m1b,  self.mcp.OUTPUT)
-
         self.mcp.config(self.m2a,  self.mcp.OUTPUT)
         self.mcp.config(self.m2b,  self.mcp.OUTPUT)
 
+    # Accessing methods
+    def get_speed_right(self):
+        return self.speed_right
 
+    def get_speed_left(self):
+        return self.speed_left
+
+    # Setting functions
     # Direction
     def move_forward(self, speed_right=0, speed_left=0):
-        # percentage 0% -> 100% of maximal speed
-        print("moveForward")
+        print("moveForward "+"R:"+str(speed_right)+" L:"+str(speed_left))
         self.mcp.output(self.m1a, 0)
         self.mcp.output(self.m1b, 1)
-
         self.mcp.output(self.m2a, 0)
         self.mcp.output(self.m2b, 1)
-
         self.speed_right = speed_right
         self.speed_left = speed_left
         self.p1.ChangeDutyCycle(self.speed_right)
         self.p2.ChangeDutyCycle(self.speed_left)
 
     def move_backward(self, speed_right=0, speed_left=0):
-        # percentage 0% -> 100% of maximal speed
-        print("moveBackward")
+        print("moveBackward"+"R:"+str(speed_right)+" L:"+str(speed_left))
         self.mcp.output(self.m1a, 1)
         self.mcp.output(self.m1b, 0)
-
         self.mcp.output(self.m2a, 1)
         self.mcp.output(self.m2b, 0)
-
         self.speed_right = speed_right
         self.speed_left = speed_left
         self.p1.ChangeDutyCycle(self.speed_right)
         self.p2.ChangeDutyCycle(self.speed_left)
 
     def turn_left(self, speed_right=0, speed_left=0):
-        # percentage 0% -> 100% of maximal speed
-        print("turn left")
+        print("turn left"+"R:"+str(speed_right)+" L:"+str(speed_left))
         self.mcp.output(self.m1a, 0)
         self.mcp.output(self.m1b, 1)
-
         self.mcp.output(self.m2a, 1)
         self.mcp.output(self.m2b, 0)
-
         if speed_left == 0:
             self.fast_motor_stop_left()
         self.speed_right = speed_right
@@ -109,14 +91,11 @@ class Motor(object):
         self.p2.ChangeDutyCycle(self.speed_left)
 
     def turn_right(self,  speed_left=0, speed_right=0):
-        # percentage 0% -> 100% of maximal speed
-        print("turn right")
+        print("turn right"+"R:"+str(speed_right)+" L:"+str(speed_left))
         self.mcp.output(self.m1a, 1)
         self.mcp.output(self.m1b, 0)
-
         self.mcp.output(self.m2a, 0)
         self.mcp.output(self.m2b, 1)
-
         if speed_right == 0:
             self.fast_motor_stop_right()
         self.speed_right = speed_right
@@ -127,14 +106,12 @@ class Motor(object):
 
     # Start/Stop
     def start_motors(self):
-        # percentage 0% -> 100% of maximal speed
         print("start motors")
         self.p1.start(0)
         self.p2.start(0)
         print("motors stared")
 
     def stop_motors(self):
-        # percentage 0% -> 100% of maximal speed
         print("stopMotors")
         self.p1.stop()
         self.p2.stop()
@@ -168,106 +145,72 @@ class Motor(object):
     def change_speed_left(self, speed):
         self.p2.ChangeDutyCycle(speed)
 
+    # Motion control
+    """
+    ..function:: enslavement_right(self, x, yr)
 
+    Regulate the right wheel:
 
-    def enslavement(self, dist_target, dist_right, dist_left, speed_right,
-                    speed_left):
+    Formula:
+    command = Kp * error + Ki * sum_errors + Kd * (error - previous_error)
+
+    Algorithm:
+    Each x milliseconds, do :
+        error = consign - measure;
+        sum_errors += error;
+        error_variation = error - previous_error;
+        command = Kp * erreur + Ki * sum_errors + Kd * error_variation;
+        previous_error = error
+
+       :type int: integer tick number
+       :param x: distance to reach = consign
+       :type int: integer tick number
+       :param yr: distance reached = measured
+       :rtype: None
+       :return: None
+   """
+    def enslavement_right(self, x, yr):
+        Kp = 1
+        # calcul de l'erreur
+        error = x - yr
+        p = Kp *error
+        c = p + self.pwm_previous_right
+        self.pwm_previous_right = c
+        if c > 100:
+            c = 100.0
+        if c < 00:
+            c = 0.0
+        self.change_speed_right(c)
+
+    def enslavement_left(self, x, yl):
+        Kp = 1
+        error = x - yl
+        p = Kp * error
+        c = p + self.pwm_previous_left
+        self.pwm_previous_left = c
+        if c > 100:
+            c = 100.0
+        if c < 00:
+            c = 0.0
+        self.change_speed_left(c)
+
+    def regulation(self, e, speed_target):
+        T = 1  # Sampling period = 1s
+        homogenization_coefficient = 3.3
         actual = time.time()
-        diff = actual - self.previous
-        if diff > 1: # each seconds
-            GAIN_PROPORTIONAL_DISTANCE = 0.7
-            GAIN_DERIVE_DISTANCE = 7
-            GAIN_PROPORTIONNEL_ROTATION = 0.7
-            GAIN_DERIVE_ROTATION = 7
-            consigne_orientation = 0
-            dist = (dist_right + dist_left) /2
-            speed = (speed_right + speed_left)/2
-            delta = dist_target - dist
-            cmd = delta * GAIN_PROPORTIONAL_DISTANCE
-            cmd_dist = cmd - GAIN_DERIVE_DISTANCE*speed
-            orientation = dist_right - dist_left
-            vitesseOrientation = speed_right - speed_left
-            delta = consigne_orientation - orientation
-            cmd = delta * GAIN_PROPORTIONNEL_ROTATION
-            cmd_rotation = cmd - GAIN_DERIVE_ROTATION*vitesseOrientation
-            if cmd_dist > 100:
-                cmd_dist = 100
-            if cmd_dist < 20:
-                cmd_dist = 20
-            cmd_right = cmd_dist + cmd_rotation
-            cmd_left = cmd_dist - cmd_rotation
-            print(str(dist_right)+" "+str(dist_left)+" "+str(cmd_right)+" "+str(cmd_left))
-            self.change_speed_right(cmd_right)
-            self.change_speed_left(cmd_left)
+        Te = actual - self.previous_time
+        if Te > T:  # each seconds
+            self.previous_time = actual
+            speed_right = e.get_speed_right_instantaneous()*homogenization_coefficient
+            speed_left = e.get_speed_left_instantaneous()*homogenization_coefficient
+            self.enslavement_right(x=speed_target, yr=speed_right)
+            self.enslavement_left(x=speed_target, yl=speed_left)
+
     # Moving
     #def move(self,dx,dy):
 
 
 
-    # def enslavement_position(self, target, process_variable):
-    #     if target > process_variable+1:  # Error computing
-    #         print("+")
-    #         self.speed_left = self.speed_left + 1
-    #         if self.speed_left > 60:
-    #             self.speed_left = 60
-    #         self.change_speed_left(self.speed_left)
-    #     if target < process_variable-1:  # Error computing
-    #         print("-")
-    #         self.speed_left = self.speed_left - 1
-    #         if self.speed_left < 35:
-    #             self.speed_left = 35
-    #         self.change_speed_left(self.speed_left)
-    #
-    # def enslavement_right(self, target,process_variable):
-    #         actual = time.time()
-    #         diff = actual - self.previous
-    #         if diff > 0.30:  # Time step to avoid redundancy
-    #             self.previous = actual
-    #             if target > process_variable+0.05:  # Error computing
-    #                 #print("+")
-    #                 self.speed_right = self.speed_right + 1
-    #                 if self.speed_right > 60:
-    #                     self.speed_right = 60
-    #                 self.change_speed_right(self.speed_right)
-    #             if target < process_variable-0.05:
-    #                 #print("-")
-    #                 self.speed_right = self.speed_right - 1
-    #                 if self.speed_right < 33:
-    #                     self.speed_right = 33
-    #                 self.change_speed_right(self.speed_right)
-    #
-    # def enslavement_left(self, target,process_variable):
-    #     actual = time.time()
-    #     diff = actual - self.previous
-    #     if diff > 0.30:  # Time step to avoid redundancy
-    #         self.previous = actual
-    #         if target > process_variable+0.05:
-    #             #print("+")
-    #             self.speed_left = self.speed_left + 1
-    #             if self.speed_left > 47:
-    #                 self.speed_left = 47
-    #             self.change_speed_left(self.speed_left)
-    #         if target < process_variable-0.05:
-    #             #print("-")
-    #             self.speed_left = self.speed_left - 1
-    #             if self.speed_left < 20:
-    #                 self.speed_left = 20
-    #             self.change_speed_left(self.speed_left)
-    #
-    # def enslavement_speed(self, target, process_variable):
-    #     actual = time.time()
-    #     diff = actual - self.previous
-    #     if diff > 0.30:  # Time step to avoid redundancy
-    #         self.previous = actual
-    #         if target > process_variable+1:
-    #             print("+")
-    #             self.speed_left = self.speed_left + 1
-    #             if self.speed_left > 82:
-    #                 self.speed_left = 82
-    #             self.change_speed_left(self.speed_left)
-    #         if target < process_variable-1:
-    #             print("-")
-    #             self.speed_left = self.speed_left - 1
-    #             if self.speed_left < 22:
-    #                 self.speed_left = 22
-    #             self.change_speed_left(self.speed_left)
+
+
+
