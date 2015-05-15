@@ -58,7 +58,7 @@ def test_line_moving(m, e, s, speed_target):
 """
 def test_echelon(m,e,s, cycle):
     if cycle < 30000 or cycle > 200000:
-        speed_target = 0.0000000 # consigne à donner dans les grandeurs
+        speed_target = 0.0000000
         test_line_moving(m, e, s, speed_target)
     else:
         speed_target = 70.0000000
@@ -103,6 +103,7 @@ def test_encoder_reaction_to_speed_variation(m,e,s,cycle):
         if cycle > (i+1)*val and cycle < (i+2)*val and not a:
             m.move_forward(speed_left=28, speed_right=35)
             a = a^1
+
 
 # import time
 # import RPi.GPIO as GPIO

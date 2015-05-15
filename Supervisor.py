@@ -17,21 +17,50 @@ class Supervisor(object):
         self.m = m
         self.e = e
         self.s = s
-        self.t = 0  # time in s
+        self.t = time.time() # time in s
+        self.previous_direction = 'R'
 
     def motion_control(self,m,e,s):
         m.regulation(e, speed_target=70)
 
-    def detection_obstacle(self):
-            dist_front = self.s.getUSFront()
-            if dist_front < self.rangeDetection:
-                self.m.vacuum_cleaner_stop()
-                self.m.move_backward(speed_left=100, speed_right=100)
-                time.sleep(2)
-                self.m.turn_right(speed_left=100, speed_right=100)
-                time.sleep(2.5)
-                self.m.move_forward(speed_left=33, speed_right=50)
-                self.m.vacuum_cleaner_start()
+    def distance_reach(self, m, e, s, Vxy):
+        if not Vxy:
+            self.m.fast_motor_stop()
+        else:
+            distance = Vxy[0][1]
+            if e.is_distance_reached(distance):
+                Vxy.pop(0)
+
+    def detection_obstacle(self, m, e, s, Vxy):
+            Ts = 0.05  # Sampling period = 0.05s
+            actual = time.time()
+            T = actual - self.t
+            if T > Ts:  # each seconds
+                self.t = actual
+                dist_front = self.s.getUSFront()
+                if dist_front < self.rangeDetection:
+                    self.s.unactivate_us_front()
+                    self.m.vacuum_cleaner_stop()
+                    distance_covered = (e.get_cm_left() + e.get_cm_left())/2
+                    if Vxy[0][0] == 'F':
+                        d = Vxy[0][1] - distance_covered
+                        e.set_zero_distance()
+                        Vxy.pop(0)
+                        if self.previous_direction == 'R':
+                            self.previous_direction = 'L'
+                            Vxy.append(['L', 19.5])
+                            Vxy.append(['F', 30])
+                            Vxy.append(['L', 19.5])
+                        else:
+                            self.previous_direction = 'R'
+                            Vxy.append(['R', 19.5])
+                            Vxy.append(['F', 30])
+                            Vxy.append(['R', 19.5])
+
+                        Vxy.append(['F', d])
+                    self.s.activate_us_front()
+                    print(str(Vxy))
+            #self.m.vacuum_cleaner_start()
 
     def end(self, dist_target):
         if self.e.is_distance_reached(dist_target):
@@ -39,6 +68,7 @@ class Supervisor(object):
             self.m.vacuum_cleaner_stop()
             time.sleep(2)  # Watch out to the time.sleep() function
             self.m.stop_motors()
+            self.s.unactivate_us_front()
             GPIO.cleanup()       # clean up GPIO on CTRL+C exit
             sys.exit(0)
 

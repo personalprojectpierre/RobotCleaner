@@ -29,20 +29,25 @@ if __name__ == '__main__':
     s.initSonar()
 
     s.activate_us_front()
-    time.sleep(0.5)
+    time.sleep(0.4)
     #m.vacuum_cleaner_start()
-    s.unactivate_us_front()
-    m.move_forward(speed_left=0, speed_right=0)
+    Vxy = [('F', 400)]
+    T = 0.4
     try:
         # Infinite and main loop
         while True:
-            sup.motion_control(m, e, s)
-            sup.end(dist_target=600)
+            sup.detection_obstacle(m,e,s, Vxy)
+            sup.m.move(e,Vxy)
+            sup.motion_control(m,e,s)
+            sup.distance_reach(m,e,s,Vxy)
             sup.cycle = sup.cycle + 1
 
     except KeyboardInterrupt:
         m.vacuum_cleaner_stop()
         m.stop_motors()
+        s.unactivate_us_front()
+        s.unactivate_us_right()
+        s.unactivate_us_left()
         GPIO.cleanup()       # clean up GPIO on CTRL+C exit
         sys.exit(0)
     GPIO.cleanup()           # clean up GPIO on normal exit
@@ -58,17 +63,3 @@ if __name__ == '__main__':
 #     m.moveForward(0)
 #     time.sleep(3)
 #     m.moveForward(60)
-
-
-# try:
-#     while 1:
-#         cmd = raw_input("Command, f/r 0..9, E.g. f5 :")
-#         direction = cmd[0]
-#         print(direction)
-#         if direction == 'g':
-#             m.move_forward(speed_left=60, speed_right=20)
-#         elif direction == 'd':
-#             m.turn_right(speed_left=20, speed_right=60)
-#         else:
-#             m.move_forward(speed_left=43, speed_right=53)
-#         print(direction)

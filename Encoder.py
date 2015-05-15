@@ -48,6 +48,12 @@ class Encoder(object):
     def get_distance_left(self):
         return self.distance_left
 
+    def get_cm_right(self):
+        return self.get_distance_right()*0.4570000
+
+    def get_cm_left(self):
+        return self.get_distance_left()*0.4570000
+
     def get_speed_right_average(self):
         delta = time.time() - self.start_time
         return self.get_distance_right() / delta  # cm/s
@@ -77,13 +83,18 @@ class Encoder(object):
         # If they are 60 detections, whereas 1 round is covered
         self.distance_left = self.get_distance_left() + self.step_distance
 
+    def set_zero_distance(self):
+        self.distance_right = 0
+        self.distance_left = 0
+
     # Predicates
     # Right is the handler wheel
     def is_distance_reached(self, distance):
-        dist_right = self.get_distance_right()
-        dist_left = self.get_distance_left()
+        dist_right = self.get_cm_right()
+        dist_left = self.get_cm_left()
         if (dist_left >= distance) or (dist_right >= distance):
             print("Delta: "+str(dist_right-dist_left))
+            self.set_zero_distance()
             return True
         return False
         

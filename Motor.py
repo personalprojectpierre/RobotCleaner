@@ -5,10 +5,6 @@ import RPi.GPIO as GPIO
 
 class Motor(object):
     def __init__(self, mcp):
-        #: pin_motor_right_e
-        self.pin_11 = 11  # BOARD
-        #: pin_motor_left_e
-        self.pin_13 = 13  # BOARD
         self.p1 = None
         self.p2 = None
         #: pin_motor_left_e
@@ -17,27 +13,32 @@ class Motor(object):
         self.m1a = 3
         #: pin_motor_right_b
         self.m1b = 4
+        #: pin_motor_right_e
+        self.m1e = 11  # BOARD
         #: pin_motor_left_a
         self.m2a = 5
         #: pin_motor_left_b
         self.m2b = 6
+        #: pin_motor_left_e
+        self.m2e = 13  # BOARD
         #: MCP23017 (expander control)
         self.mcp = mcp
         self.speed_right = 0
         self.speed_left = 0
-        self.previous_time = 0
+        self.previous_time = time.time()
         self.pwm_previous_right = 0
         self.pwm_previous_left = 0
+        self.direction = 'S'
 
     def init_motor(self, speed_right=0, speed_left=0):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setwarnings(False)
-        GPIO.setup(self.pin_13, GPIO.OUT)
-        GPIO.setup(self.pin_11, GPIO.OUT)
+        GPIO.setup(self.m2e, GPIO.OUT)
+        GPIO.setup(self.m1e, GPIO.OUT)
         self.speed_right = speed_right
         self.speed_left = speed_left
-        self.p1 = GPIO.PWM(self.pin_13, 500)  # (channel=4)  frequency=500Hz
-        self.p2 = GPIO.PWM(self.pin_11, 500)  # (channel=4)  frequency=500Hz
+        self.p1 = GPIO.PWM(self.m2e, 500)  # (channel=4)  frequency=500Hz
+        self.p2 = GPIO.PWM(self.m1e, 500)  # (channel=4)  frequency=500Hz
         self.start_motors()
         self.mcp.config(self.m3e,  self.mcp.OUTPUT)
         self.vacuum_cleaner_stop()
@@ -55,67 +56,47 @@ class Motor(object):
 
     # Setting functions
     # Direction
-    def move_forward(self, speed_right=0, speed_left=0):
-        print("moveForward "+"R:"+str(speed_right)+" L:"+str(speed_left))
+    def move_forward(self):
         self.mcp.output(self.m1a, 0)
         self.mcp.output(self.m1b, 1)
         self.mcp.output(self.m2a, 0)
         self.mcp.output(self.m2b, 1)
-        self.speed_right = speed_right
-        self.speed_left = speed_left
-        self.p1.ChangeDutyCycle(self.speed_right)
-        self.p2.ChangeDutyCycle(self.speed_left)
 
-    def move_backward(self, speed_right=0, speed_left=0):
-        print("moveBackward"+"R:"+str(speed_right)+" L:"+str(speed_left))
+    def move_backward(self):
         self.mcp.output(self.m1a, 1)
         self.mcp.output(self.m1b, 0)
         self.mcp.output(self.m2a, 1)
         self.mcp.output(self.m2b, 0)
-        self.speed_right = speed_right
-        self.speed_left = speed_left
-        self.p1.ChangeDutyCycle(self.speed_right)
-        self.p2.ChangeDutyCycle(self.speed_left)
 
-    def turn_left(self, speed_right=0, speed_left=0):
-        print("turn left"+"R:"+str(speed_right)+" L:"+str(speed_left))
+    def turn_left(self):
         self.mcp.output(self.m1a, 0)
         self.mcp.output(self.m1b, 1)
         self.mcp.output(self.m2a, 1)
         self.mcp.output(self.m2b, 0)
-        if speed_left == 0:
-            self.fast_motor_stop_left()
-        self.speed_right = speed_right
-        self.speed_left = speed_left
-        self.p1.ChangeDutyCycle(self.speed_right)
-        self.p2.ChangeDutyCycle(self.speed_left)
 
-    def turn_right(self,  speed_left=0, speed_right=0):
-        print("turn right"+"R:"+str(speed_right)+" L:"+str(speed_left))
+    def turn_right(self):
         self.mcp.output(self.m1a, 1)
         self.mcp.output(self.m1b, 0)
         self.mcp.output(self.m2a, 0)
         self.mcp.output(self.m2b, 1)
-        if speed_right == 0:
-            self.fast_motor_stop_right()
-        self.speed_right = speed_right
-        self.speed_left = speed_left
-        self.p1.ChangeDutyCycle(self.speed_right)
-        self.p2.ChangeDutyCycle(self.speed_left)
-
 
     # Start/Stop
     def start_motors(self):
         print("start motors")
         self.p1.start(0)
         self.p2.start(0)
-        print("motors stared")
+        print("motors started")
 
     def stop_motors(self):
         print("stopMotors")
         self.p1.stop()
         self.p2.stop()
         print("motors stopped.")
+
+    def free_running_motor(self):
+        print("motors free running")
+        self.mcp.output(self.m1e, 0)
+        self.mcp.output(self.m2e, 0)
 
     def fast_motor_stop(self):
         self.fast_motor_stop_right()
@@ -130,11 +111,11 @@ class Motor(object):
         self.mcp.output(self.m2b, 0)
 
     def vacuum_cleaner_start(self):
-        print("vacuum_cleaner_start")
+        print("Vacuum Cleaner Start")
         self.mcp.output(self.m3e, 1)
 
     def vacuum_cleaner_stop(self, duration=1):
-        print("turnRight")
+        print("Vacuum Cleaner Stop")
         self.mcp.output(self.m3e, 0)
 
 
@@ -195,11 +176,11 @@ class Motor(object):
         self.change_speed_left(c)
 
     def regulation(self, e, speed_target):
-        T = 1  # Sampling period = 1s
+        Ts = 1  # Sampling period = 1s
         homogenization_coefficient = 3.3
         actual = time.time()
-        Te = actual - self.previous_time
-        if Te > T:  # each seconds
+        T = actual - self.previous_time
+        if T > Ts:  # each seconds
             self.previous_time = actual
             speed_right = e.get_speed_right_instantaneous()*homogenization_coefficient
             speed_left = e.get_speed_left_instantaneous()*homogenization_coefficient
@@ -207,7 +188,25 @@ class Motor(object):
             self.enslavement_left(x=speed_target, yl=speed_left)
 
     # Moving
-    #def move(self,dx,dy):
+    def move(self, e, Vxy):
+        if not Vxy:
+            self.fast_motor_stop()
+        else:
+            direction = Vxy[0][0]
+            if direction != self.direction:
+                if direction == 'F':
+                    self.move_forward()
+                    self.direction = 'F'
+                elif direction == 'B':
+                    self.move_backward()
+                    self.direction = 'B'
+                elif direction == 'R':
+                    self.turn_right()
+                    self.direction = 'R'
+                elif direction == 'L':
+                    self.turn_left()
+                    self.direction = 'L'
+
 
 
 

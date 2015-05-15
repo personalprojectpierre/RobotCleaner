@@ -7,15 +7,12 @@ class Sonar(object):
     def __init__(self, mcp):
         # MCP3008 component
         # ADC definition
-        pin_us_front = 0
-        pin_us_left  = 1
-        pin_us_right = 2
-        pin_us_front_e = 8
-        pin_us_left_e = 9
-        pin_us_right_e = 10
-        self.pin_us_front = pin_us_front
-        self.pin_us_front_e = pin_us_front_e
-        self.pin_us_left = pin_us_left
+        self.pin_us_front = 0  # pin_us_front
+        self.pin_us_left  = 1  # pin_us_left
+        self.pin_us_right = 2  # pin_us_right
+        self.pin_us_front_e = 8   # pin_us_front_e
+        self.pin_us_left_e  = 9   # pin_us_left_e
+        self.pin_us_right_e = 10  # pin_us_right_e
         # SPI definition pins
         pin_spi_cs   = 12  # channel 18
         pin_spi_mosi = 16  # channel 23
@@ -33,6 +30,8 @@ class Sonar(object):
 
     def initSonar(self):
         self.mcp.config(self.pin_us_front_e,  self.mcp.OUTPUT)
+        self.mcp.config(self.pin_us_left_e,  self.mcp.OUTPUT)
+        self.mcp.config(self.pin_us_right_e,  self.mcp.OUTPUT)
         GPIO.setmode(GPIO.BOARD)  # != GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self.pin_spi_mosi, GPIO.OUT)
@@ -45,6 +44,18 @@ class Sonar(object):
 
     def unactivate_us_front(self):
         self.mcp.output(self.pin_us_front_e, False)
+
+    def activate_us_left(self):
+        self.mcp.output(self.pin_us_left_e, True)
+
+    def unactivate_us_left(self):
+        self.mcp.output(self.pin_us_left_e, False)
+
+    def activate_us_right(self):
+        self.mcp.output(self.pin_us_right_e, True)
+
+    def unactivate_us_right(self):
+        self.mcp.output(self.pin_us_right_e, False)
 
     """
     US
@@ -100,4 +111,14 @@ class Sonar(object):
     def getUSFront(self):
         cm = self.get_cm(self.pin_us_front)
         print("Front Obstacle:" +str(cm)+"cm")
+        return cm
+
+    def getUSLeft(self):
+        cm = self.get_cm(self.pin_us_left)
+        print("Left Obstacle:" +str(cm)+"cm")
+        return cm
+
+    def getUSRight(self):
+        cm = self.get_cm(self.pin_us_right)
+        print("Right Obstacle:" +str(cm)+"cm")
         return cm
