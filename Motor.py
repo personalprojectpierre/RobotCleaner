@@ -37,8 +37,8 @@ class Motor(object):
         GPIO.setup(self.m1e, GPIO.OUT)
         self.speed_right = speed_right
         self.speed_left = speed_left
-        self.p1 = GPIO.PWM(self.m2e, 500)  # (channel=4)  frequency=500Hz
-        self.p2 = GPIO.PWM(self.m1e, 500)  # (channel=4)  frequency=500Hz
+        self.p1 = GPIO.PWM(self.m2e, 500)  # (channel=13)  frequency=500Hz
+        self.p2 = GPIO.PWM(self.m1e, 500)  # (channel=11)  frequency=500Hz
         self.start_motors()
         self.mcp.config(self.m3e,  self.mcp.OUTPUT)
         self.vacuum_cleaner_stop()
@@ -56,6 +56,20 @@ class Motor(object):
 
     # Setting functions
     # Direction
+    """
+    Motor A and B:
+    +------------+------------+-----------+
+    |         Inputs          | Functions |
+    +============+============+===========+
+    |            | A=1  B=0   | Forward   |
+    +    E=1     +------------+-----------+
+    |            | A=0  B=1   | Backward  |
+    +            +------------+-----------+
+    |            |    A=B     | Fast stop |
+    +------------+------------+-----------+
+    |    E=0     |    X       | Free run. |
+    +------------+------------+-----------+
+    """
     def move_forward(self):
         self.mcp.output(self.m1a, 0)
         self.mcp.output(self.m1b, 1)
@@ -114,10 +128,9 @@ class Motor(object):
         print("Vacuum Cleaner Start")
         self.mcp.output(self.m3e, 1)
 
-    def vacuum_cleaner_stop(self, duration=1):
+    def vacuum_cleaner_stop(self):
         print("Vacuum Cleaner Stop")
         self.mcp.output(self.m3e, 0)
-
 
     # Speed
     def change_speed_right(self, speed):
@@ -149,7 +162,7 @@ class Motor(object):
        :param yr: distance reached = measured
        :rtype: None
        :return: None
-   """
+    """
     def enslavement_right(self, x, yr):
         Kp = 1
         # calcul de l'erreur
@@ -187,8 +200,18 @@ class Motor(object):
             self.enslavement_right(x=speed_target, yr=speed_right)
             self.enslavement_left(x=speed_target, yl=speed_left)
 
-    # Moving
-    def move(self, e, Vxy):
+    # Motion
+    """
+    ..function:: move(self, Vxy)
+
+    Regulate the right wheel:
+
+       :type Vxx: ([char, int)]
+       :param Vxx: Motion vector
+       :rtype: None
+       :return: None
+    """
+    def move(self, Vxy):
         if not Vxy:
             self.fast_motor_stop()
         else:

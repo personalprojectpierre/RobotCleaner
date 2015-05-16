@@ -28,38 +28,27 @@ if __name__ == '__main__':
     e.initEncoder()
     s.initSonar()
 
-    s.activate_us_front()
-    time.sleep(0.4)
+    # Ultrasonic sensors activation
+    s.activate_us()
+
+    # Vacuum cleaner starting
     #m.vacuum_cleaner_start()
-    Vxy = [('F', 400)]
-    T = 0.4
+
+    # Temporising before starting
+    time.sleep(0.4)
     try:
         # Infinite and main loop
         while True:
-            sup.detection_obstacle(m,e,s, Vxy)
-            sup.m.move(e,Vxy)
-            sup.motion_control(m,e,s)
-            sup.distance_reach(m,e,s,Vxy)
+            sup.detection_obstacle()
+            sup.choose_direction()
+            sup.motion_control()
+            sup.distance_reach()
             sup.cycle = sup.cycle + 1
 
     except KeyboardInterrupt:
         m.vacuum_cleaner_stop()
         m.stop_motors()
-        s.unactivate_us_front()
-        s.unactivate_us_right()
-        s.unactivate_us_left()
+        s.unactivate_us()
         GPIO.cleanup()       # clean up GPIO on CTRL+C exit
         sys.exit(0)
     GPIO.cleanup()           # clean up GPIO on normal exit
-
-
-# Algo
-# Demarage
-# Vérification position des codeurs tous sur blanc
-
-#detection_obstacle(m)
-# if e.is_one_round_left():
-#     print(e.get_count_left())
-#     m.moveForward(0)
-#     time.sleep(3)
-#     m.moveForward(60)

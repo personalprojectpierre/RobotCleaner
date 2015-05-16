@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf8 -*-
 import RPi.GPIO as GPIO
-
+import time
 
 class Sonar(object):
     def __init__(self, mcp):
@@ -30,7 +30,7 @@ class Sonar(object):
 
     def initSonar(self):
         self.mcp.config(self.pin_us_front_e,  self.mcp.OUTPUT)
-        self.mcp.config(self.pin_us_left_e,  self.mcp.OUTPUT)
+        self.mcp.config(self.pin_us_left_e,   self.mcp.OUTPUT)
         self.mcp.config(self.pin_us_right_e,  self.mcp.OUTPUT)
         GPIO.setmode(GPIO.BOARD)  # != GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
@@ -39,30 +39,31 @@ class Sonar(object):
         GPIO.setup(self.pin_spi_clk,  GPIO.OUT)
         GPIO.setup(self.pin_spi_cs,   GPIO.OUT)
 
-    def activate_us_front(self):
+    """
+    ..function:: activate_us(self)
+    Activate each ultrasonic sensor
+       :rtype: None
+       :return: None
+    """
+    def activate_us(self):
         self.mcp.output(self.pin_us_front_e, True)
-
-    def unactivate_us_front(self):
-        self.mcp.output(self.pin_us_front_e, False)
-
-    def activate_us_left(self):
-        self.mcp.output(self.pin_us_left_e, True)
-
-    def unactivate_us_left(self):
-        self.mcp.output(self.pin_us_left_e, False)
-
-    def activate_us_right(self):
+        self.mcp.output(self.pin_us_left_e,  True)
         self.mcp.output(self.pin_us_right_e, True)
 
-    def unactivate_us_right(self):
+    """
+    ..function:: deactivate_us(self)
+    Deactivate each ultrasonic sensor
+       :rtype: None
+       :return: None
+    """
+    def unactivate_us(self):
         self.mcp.output(self.pin_us_right_e, False)
+        self.mcp.output(self.pin_us_front_e, False)
+        self.mcp.output(self.pin_us_left_e,  False)
 
     """
-    US
-
-    Function
+    ..function:: readADC(self, adcnum)
     SPI reading of the chip MCP3008 of the input adcnum (0 to 7)
-
     return: value
     rtype: int
     """
@@ -97,9 +98,16 @@ class Sonar(object):
         GPIO.output(self.pin_spi_cs, True)
 
         adcout /= 2       # first bit is 'null' so drop it
-        #self.mcp.output(self.pin_us_front_e, False)
         return adcout
 
+    """
+    ..function:: activate_us(self)
+    Activate each ultrasonic sensor
+       :type adcnum: integer 8 bits
+       :param adcnum: distance value
+       :rtype: integer
+       :return: distance in cm
+    """
     def get_cm(self, adcnum):
         inch = 3300.0/512.0
         read_adc0 = self.readADC(adcnum)

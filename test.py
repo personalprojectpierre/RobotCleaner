@@ -10,6 +10,7 @@ import time
 import RPi.GPIO as GPIO
 
 """
+    .. note::
     Conclusion:
     38 - 53 left
     41 - 53 left
@@ -28,6 +29,7 @@ def test_number_round_separately(m, e, s):
             m.fast_motor_stop_left()
 
 """
+    .. note::
     dist_target = 225.0000000  # Distance to cover
     test_line_distance(m, e, s, dist_target)
     cf EncoderWithoutBounceTime.xlsx
@@ -54,7 +56,7 @@ def test_line_moving(m, e, s, speed_target):
     m.regulation(e, speed_target)
 
 """
-    test_echelon(m, e, s, cycle=sup.cycle)
+    .. note:: test_echelon(m, e, s, cycle=sup.cycle)
 """
 def test_echelon(m,e,s, cycle):
     if cycle < 30000 or cycle > 200000:
