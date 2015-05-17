@@ -2,7 +2,13 @@
 # -*- encoding: utf8 -*-
 import RPi.GPIO as GPIO
 import time
+"""
+.. module:: Supervisor class
+   :platform: Unix (Raspberry Pi Debian)
+   :synopsis: Supervise the sonars
 
+.. moduleauthor:: Pierre
+"""
 class Sonar(object):
     def __init__(self, mcp):
         # MCP3008 component

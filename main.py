@@ -47,6 +47,7 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         m.vacuum_cleaner_stop()
+        m.fast_motor_stop()
         m.stop_motors()
         s.unactivate_us()
         GPIO.cleanup()       # clean up GPIO on CTRL+C exit

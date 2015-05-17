@@ -3,6 +3,13 @@
 import time
 import RPi.GPIO as GPIO
 
+"""
+.. module:: Encoder class
+   :platform: Unix (Raspberry Pi Debian)
+   :synopsis: Supervise the encoder
+
+.. moduleauthor:: Pierre
+"""
 
 class Encoder(object):
     def __init__(self):
@@ -11,10 +18,8 @@ class Encoder(object):
         #: perimeter / step = 31.4 /60 = 0.5233333 (/30 =  1.0471975)
         self.step_distance = 1.0000000
         #: Chanel definition
-        pin_encoder_right = 15      # chanel_encoder_right = 22
-        pin_encoder_left = 7        # chanel_encoder_left = 4
-        self.pin_encoder_right = pin_encoder_right  #chanel_encoder_right
-        self.pin_encoder_left = pin_encoder_left    #chanel_encoder_left
+        self.pin_encoder_right = 15  # chanel_encoder_right = 22
+        self.pin_encoder_left = 7    # chanel_encoder_left = 4
         #: Distance covered
         self.distance_right = 0.0000000
         self.distance_left = 0.0000000
@@ -23,8 +28,7 @@ class Encoder(object):
         self.speed_left = 0.0000000
         #: Time
         self.start_time = time.time()
-        self.time_left_previous = time.time()
-        self.time_right_previous = time.time()
+        #: Distance
         self.distance_right_previous = 0.0000000
         self.distance_left_previous = 0.0000000
 
@@ -76,11 +80,9 @@ class Encoder(object):
 
     # Setting functions
     def increase_distance_right(self, channel):
-        # If they are 60 detections, whereas 1 round is covered
         self.distance_right = self.get_distance_right() + self.step_distance
 
     def increase_distance_left(self, channel):
-        # If they are 60 detections, whereas 1 round is covered
         self.distance_left = self.get_distance_left() + self.step_distance
 
     def set_zero_distance(self):
@@ -88,7 +90,10 @@ class Encoder(object):
         self.distance_left = 0
 
     # Predicates
-    # Right is the handler wheel
+    """
+    ..function:: is_distance_reached(self, distance)
+     Check the distance covered, and make a reset of the distance
+    """
     def is_distance_reached(self, distance):
         dist_right = self.get_cm_right()
         dist_left = self.get_cm_left()

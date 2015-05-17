@@ -3,31 +3,36 @@
 import time
 import RPi.GPIO as GPIO
 
+"""
+.. module:: Supervisor class
+   :platform: Unix (Raspberry Pi Debian)
+   :synopsis: Supervise the motors
+
+.. moduleauthor:: Pierre
+"""
+
 class Motor(object):
     def __init__(self, mcp):
         self.p1 = None
         self.p2 = None
-        #: pin_motor_left_e
-        self.m3e = 7
-        #: pin_motor_right_a
-        self.m1a = 3
-        #: pin_motor_right_b
-        self.m1b = 4
-        #: pin_motor_right_e
-        self.m1e = 11  # BOARD
-        #: pin_motor_left_a
-        self.m2a = 5
-        #: pin_motor_left_b
-        self.m2b = 6
-        #: pin_motor_left_e
-        self.m2e = 13  # BOARD
+        self.m1a = 3  #: pin_motor_right_a
+        self.m1b = 4  #: pin_motor_right_b
+        self.m2a = 5  #: pin_motor_left_a
+        self.m2b = 6  #: pin_motor_left_b
+        self.m3e = 7  #: pin_motor_vacuum_e
+        self.m1e = 11  #: pin_motor_right_e  BOARD
+        self.m2e = 13  #: pin_motor_left_e  BOARD
         #: MCP23017 (expander control)
         self.mcp = mcp
+        # Speed
         self.speed_right = 0
         self.speed_left = 0
+        # Time
         self.previous_time = time.time()
+        # Pwm
         self.pwm_previous_right = 0
         self.pwm_previous_left = 0
+        # Direction
         self.direction = 'S'
 
     def init_motor(self, speed_right=0, speed_left=0):
@@ -102,7 +107,7 @@ class Motor(object):
         print("motors started")
 
     def stop_motors(self):
-        print("stopMotors")
+        print("stop motors")
         self.p1.stop()
         self.p2.stop()
         print("motors stopped.")
