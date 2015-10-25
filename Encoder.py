@@ -18,8 +18,8 @@ class Encoder(object):
         #: perimeter / step = 31.4 /60 = 0.5233333 (/30 =  1.0471975)
         self.step_distance = 1.0000000
         #: Chanel definition
-        self.pin_encoder_right = 15  # chanel_encoder_right = 22
-        self.pin_encoder_left = 7    # chanel_encoder_left = 4
+        self.pin_encoder_right = 21  # chanel_encoder_right = 22
+        self.pin_encoder_left = 19    # chanel_encoder_left = 4
         #: Distance covered
         self.distance_right = 0.0000000
         self.distance_left = 0.0000000

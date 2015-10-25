@@ -32,7 +32,8 @@ if __name__ == '__main__':
     s.activate_us()
 
     # Vacuum cleaner starting
-    #m.vacuum_cleaner_start()
+    m.vacuum_cleaner_start()
+    m.change_speed_vacuum(50)
 
     # Temporising before starting
     time.sleep(0.4)

@@ -2,42 +2,48 @@
 # -*- encoding: utf8 -*-
 import RPi.GPIO as GPIO
 import time
-"""
-.. module:: Supervisor class
-   :platform: Unix (Raspberry Pi Debian)
-   :synopsis: Supervise the sonars
 
-.. moduleauthor:: Pierre
-"""
+
+##
+# @file Sonar.py
+# @brief Supervise the sonars
+# @author Pierre
+# @version 0
+# @date 31th july 2015
+# Unix (Raspberry Pi Debian)
+
+##
+# @class Sonar
+# @brief Class to represent the sonar
 class Sonar(object):
+
     def __init__(self, mcp):
-        # MCP3008 component
-        # ADC definition
-        self.pin_us_front = 0  # pin_us_front
-        self.pin_us_left  = 1  # pin_us_left
+        ##
+        # @Enum Init the class Sonar
+        ## MCP3008 component
+        self.pin_us_left  = 0  # pin_us_left
+        self.pin_us_front = 1  # pin_us_front
         self.pin_us_right = 2  # pin_us_right
-        self.pin_us_front_e = 8   # pin_us_front_e
-        self.pin_us_left_e  = 9   # pin_us_left_e
-        self.pin_us_right_e = 10  # pin_us_right_e
-        # SPI definition pins
+        ## MCP23017
+        self.pin_us_e     = 8   # pin_us_enable
+        ## SPI definition pins ADC definition
         pin_spi_cs   = 12  # channel 18
         pin_spi_mosi = 16  # channel 23
         pin_spi_miso = 18  # channel 24
         pin_spi_clk  = 22  # channel 25
-        #: pin_motor_left_e
+        ## CS SPI
         self.pin_spi_cs = pin_spi_cs
-        #: pin_motor_left_a
+        ## MOSI SPI
         self.pin_spi_mosi = pin_spi_mosi
-        #: pin_motor_left_e
+        ## MISO SPI
         self.pin_spi_miso = pin_spi_miso
-        #: pin_motor_left_a
+        ## CLK SPI
         self.pin_spi_clk = pin_spi_clk
+        ## CLK MCP
         self.mcp = mcp
 
     def initSonar(self):
-        self.mcp.config(self.pin_us_front_e,  self.mcp.OUTPUT)
-        self.mcp.config(self.pin_us_left_e,   self.mcp.OUTPUT)
-        self.mcp.config(self.pin_us_right_e,  self.mcp.OUTPUT)
+        self.mcp.config(self.pin_us_e,  self.mcp.OUTPUT)
         GPIO.setmode(GPIO.BOARD)  # != GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self.pin_spi_mosi, GPIO.OUT)
@@ -45,34 +51,28 @@ class Sonar(object):
         GPIO.setup(self.pin_spi_clk,  GPIO.OUT)
         GPIO.setup(self.pin_spi_cs,   GPIO.OUT)
 
-    """
-    ..function:: activate_us(self)
-    Activate each ultrasonic sensor
-       :rtype: None
-       :return: None
-    """
+    ##
+    #  @fn activate_us(self)
+    #  @brief Activate each ultrasonic sensor
+    #  @param self The object pointer.
+    #  @return
     def activate_us(self):
-        self.mcp.output(self.pin_us_front_e, True)
-        self.mcp.output(self.pin_us_left_e,  True)
-        self.mcp.output(self.pin_us_right_e, True)
+        self.mcp.output(self.pin_us_e, True)
 
-    """
-    ..function:: deactivate_us(self)
-    Deactivate each ultrasonic sensor
-       :rtype: None
-       :return: None
-    """
+    ##
+    #  @fn unactivate_us(self)
+    #  @brief Deactivate each ultrasonic sensor
+    #  @param self The object pointer.
+    #  @return None
     def unactivate_us(self):
-        self.mcp.output(self.pin_us_right_e, False)
-        self.mcp.output(self.pin_us_front_e, False)
-        self.mcp.output(self.pin_us_left_e,  False)
+        self.mcp.output(self.pin_us_e, False)
 
-    """
-    ..function:: readADC(self, adcnum)
-    SPI reading of the chip MCP3008 of the input adcnum (0 to 7)
-    return: value
-    rtype: int
-    """
+    ##
+    #  @fn readADC(self, adcnum)
+    #  @brief SPI reading of the chip MCP3008 of the input adcnum (0 to 7)
+    #  @params self The object pointer.
+    #          adcnum
+    #  @return value integer
     def readADC(self, adcnum):
         if ((adcnum > 7) or (adcnum < 0)):
                 return -1
@@ -106,15 +106,14 @@ class Sonar(object):
         adcout /= 2       # first bit is 'null' so drop it
         return adcout
 
-    """
-    ..function:: activate_us(self)
-    Activate each ultrasonic sensor
-       :type adcnum: integer 8 bits
-       :param adcnum: distance value
-       :rtype: integer
-       :return: distance in cm
-    """
+    ##
+    #  @fn get_cm(self, adcnum)
+    #  @brief Read US
+    #  @params self The object pointer.
+    #          adcnum: integer 8 bits
+    #  @return  distance in cm
     def get_cm(self, adcnum):
+
         inch = 3300.0/512.0
         read_adc0 = self.readADC(adcnum)
         mV = read_adc0 * (3300.0 / 1024.0)

@@ -68,7 +68,7 @@ class Supervisor(object):
     If a obstacle is detected, the mobile makes a ZigZag moving
     """
     def detection_obstacle(self):
-            Ts = 0.1  # Sampling period = 0.05s
+            Ts = 1  # Sampling period = 0.05s
             actual = time.time()
             T = actual - self.t
             if T > Ts:  # each seconds

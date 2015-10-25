@@ -9,6 +9,61 @@ import time
 
 import RPi.GPIO as GPIO
 
+# Tests motor
+def test_each_wheel_separately(m):
+    print("Test each wheel separately")
+    m.change_speed_right(100)
+    m.change_speed_left(100)
+    print("Test 1")
+    m.mcp.output(m.m2a, 1)
+    m.mcp.output(m.m2b, 0)
+    m.mcp.output(m.m3a, 0)
+    m.mcp.output(m.m3b, 0)
+    m.p1.ChangeDutyCycle(0)
+    time.sleep(10)
+    print("Test 2")
+    m.mcp.output(m.m2a, 0)
+    m.mcp.output(m.m2b, 1)
+    m.mcp.output(m.m3a, 0)
+    m.mcp.output(m.m3b, 0)
+    time.sleep(10)
+    print("Test 3")
+    m.mcp.output(m.m2a, 0)
+    m.mcp.output(m.m2b, 0)
+    m.mcp.output(m.m3a, 1)
+    m.mcp.output(m.m3b, 0)
+    time.sleep(10)
+    print("Test 4")
+    m.mcp.output(m.m2a, 0)
+    m.mcp.output(m.m2b, 0)
+    m.mcp.output(m.m3a, 0)
+    m.mcp.output(m.m3b, 1)
+    time.sleep(10)
+    print("Stop")
+    m.fast_motor_stop()
+    time.sleep(10)
+
+def test_direction_mobile(m):
+    print("Test Direction mobile")
+    m.change_speed_right(100)
+    m.change_speed_left(100)
+    print("Forward")
+    m.move_forward()
+    time.sleep(10)
+    print("Backward")
+    m.move_backward()
+    time.sleep(10)
+    print("Left")
+    m.turn_left()
+    time.sleep(10)
+    print("Right")
+    m.turn_right()
+    time.sleep(10)
+    print("Stop")
+    m.fast_motor_stop()
+    time.sleep(10)
+
+# Test coder
 """
     .. note::
     Conclusion:
@@ -18,7 +73,7 @@ import RPi.GPIO as GPIO
     Distance covered seems good < 5%
     Need to set a regulation loop to control motors velocity
 """
-def test_number_round_separately(m, e, s):
+def test_number_round_separately(m, e):
 
     print("- right: "+str(e.get_distance_right()))
     if e.get_distance_right() > 450:
@@ -34,7 +89,7 @@ def test_number_round_separately(m, e, s):
     test_line_distance(m, e, s, dist_target)
     cf EncoderWithoutBounceTime.xlsx
 """
-def test_line_distance(m, e, s, dist_target):
+def test_line_distance(m, e, dist_target):
     dist_right = e.get_distance_right()
     dist_left = e.get_distance_left()
     my_file = open("line_distance.txt", "a")
@@ -45,14 +100,14 @@ def test_line_distance(m, e, s, dist_target):
         print("Dist right: "+str(dist_right)+" Dist left: "+str(dist_left))
         print("Delta: "+str(delta))
         m.fast_motor_stop()
-        m.vacuum_cleaner_stop()
+        #m.vacuum_cleaner_stop()
         time.sleep(2)
         m.stop_motors()
         GPIO.cleanup()
         sys.exit(0)
         # Conclusion: It depends on the bouncetime and speed
 
-def test_line_moving(m, e, s, speed_target):
+def test_line_moving(m, e, speed_target):
     m.regulation(e, speed_target)
 
 """
@@ -89,7 +144,7 @@ def test_linearity_motor_encoder(m,e,s):
         speed_left = e.get_speed_left()
         my_file.write(str(speed)+" "+str(speed_right)+" "+str(speed_left)+"\n")
     my_file.close()
-    m.vacuum_cleaner_stop()
+    #m.vacuum_cleaner_stop()
     m.stop_motors()
     GPIO.cleanup()
     sys.exit(0)
@@ -107,28 +162,5 @@ def test_encoder_reaction_to_speed_variation(m,e,s,cycle):
             a = a^1
 
 
-# import time
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BOARD)
-# dc = 100 # Duty cycle
-# in1_pin = 11
-# in2_pin = 13
-# GPIO.setup(in1_pin, GPIO.OUT)
-# GPIO.setup(in2_pin, GPIO.OUT)
-# p = GPIO.PWM(in1_pin, 500) # channel=4  frequency=500Hz
-# p.start(0)
-# p.ChangeDutyCycle(dc)
-# try:
-#     while 1:
-#         print("")
-#         cmd = raw_input("Command, f/r 0..9, E.g. f5 :")
-#         direction = cmd[0]
-#         speed = int(cmd[1]) * 11
-#         print(direction)
-#         print(speed)
-#         p.ChangeDutyCycle(speed)
-#         time.sleep(2)
-# except KeyboardInterrupt:
-#     pass
-# p.stop()
-# GPIO.cleanup(
+
+
